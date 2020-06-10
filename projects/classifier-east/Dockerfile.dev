@@ -1,0 +1,48 @@
+##  Classifier-Python3
+##################################################################
+FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04 as production
+
+#COPY scripts/tzdata.sh /tmp/tzdata.sh
+#RUN /tmp/tzdata.sh
+
+##  Wizard
+##################################################################
+RUN apt-get update && apt-get install -y \
+        ffmpeg \
+        wget \
+        git \
+        python \
+        python-pip \
+        python3 \
+        python3-pip \
+        cmake \
+        build-essential \
+        autoconf \
+        automake \
+        gdb \
+        git \
+        libffi-dev \
+        zlib1g-dev \
+        libssl-dev \
+        libtesseract-dev
+
+RUN pip install --upgrade pip
+
+RUN pip3 install --upgrade pip
+
+RUN pip3 install pika boto3
+
+WORKDIR /usr/src/app
+
+COPY scripts/opencv4_3.sh /tmp/opencv4_3.sh
+RUN /tmp/opencv4_3.sh
+
+COPY scripts/pyopencv4_sift.sh /tmp/pyopencv4_sift.sh
+RUN /tmp/pyopencv4_sift.sh
+
+COPY scripts/download_east.sh /tmp/download_east.sh
+RUN /tmp/download_east.sh
+
+RUN pip3 install imutils
+
+COPY source /usr/src/app

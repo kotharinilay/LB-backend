@@ -1,0 +1,30 @@
+{
+  "parserOptions": {
+    // Required for certain syntax usages
+    "ecmaVersion": 2018
+  },
+  "plugins": [
+    "promise"
+  ],
+  "extends": ["eslint:recommended", "google"],
+  "rules": {
+    // Removed rule "disallow the use of console" from recommended eslint rules
+    "no-console": "off",
+
+    "linebreak-style": "off",
+
+    "indent": "off",
+
+    "require-jsdoc": "off",
+
+    "no-undef": "off",
+
+    "comma-dangle": ["error", "never"],
+
+    "new-cap": "off",
+
+    "max-len": ["error", {
+      "ignorePattern": "^\\s*const\\s.+=\\s*require\\s*\\("
+    }]
+  }
+}

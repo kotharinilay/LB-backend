@@ -1,0 +1,55 @@
+service: classifier-segments
+
+app: classifier
+org: roosevelt
+
+plugins:
+  - serverless-attach-managed-policy
+
+provider:
+  name: aws
+  stage: ${opt:stage, 'dev'}
+  managedPolicyArns:
+    - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+  memorySize: 3008
+  timeout: 900
+  region: us-east-2
+  vpc:
+    securityGroupIds:
+      - sg-0c2e1def8b4098d16
+    subnetIds:
+      - subnet-0d98ce651f08cdb1e
+      - subnet-0d2483828fd2c2264
+      - subnet-08479fd01a2bdaa32
+  environment:
+    SRC_BUCKET: ${self:custom.source_bucket.${self:provider.stage}}
+    DEST_BUCKET: ${self:custom.destination_bucket.${self:provider.stage}}
+    PYTHONPATH: "/opt:/opt/python"
+
+functions:
+
+  extract_frames:
+    runtime: python3.6
+    handler: handler_frames.extract_frames
+    events:
+      - s3:
+          MaximumRetryAttempts: 0
+          bucket: ${self:custom.source_bucket.${self:provider.stage}}
+          existing: true
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .ts_json
+    layers:
+      - arn:aws:lambda:us-east-2:160492786134:layer:Python-FFMPEG:2
+      - arn:aws:lambda:us-east-2:160492786134:layer:Python36-boto3-filetype:1
+
+custom:
+  stages:
+    - dev
+    - prod
+  source_bucket:
+    dev: "wizardlabs.gg-dev"
+    prod: "wizardlabs.gg-prod"
+  destination_bucket:
+    dev: "wizardlabs.gg-dev"
+    prod: "wizardlabs.gg-prod"

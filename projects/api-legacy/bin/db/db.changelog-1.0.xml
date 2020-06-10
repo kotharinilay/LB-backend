@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="1.0.1" author="msekerjitsky">
+        <comment>Create table for user</comment>
+        <sql splitStatements="true">
+            CREATE TABLE IF NOT EXISTS wizardlabs.user (
+                id SERIAL PRIMARY KEY,
+                old_id VARCHAR(30) NOT NULL,
+                email VARCHAR(100),
+                password VARCHAR(256),
+                name VARCHAR(256),
+                avatar JSONB,
+                background JSONB,
+                settings JSONB,
+                status VARCHAR(20),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+        </sql>
+        <rollback>
+            DROP TABLE IF EXISTS wizardlabs.user;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.0.2" author="msekerjitsky">
+        <comment>Create common tables</comment>
+        <sql splitStatements="true">
+            CREATE TABLE IF NOT EXISTS wizardlabs.game (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(256),
+                thumbnail_url VARCHAR(512),
+                twitch_id VARCHAR(20)
+            );
+
+            INSERT INTO wizardlabs.game(name, thumbnail_url, twitch_id) VALUES(
+                'Overwatch', 'https://static-cdn.jtvnw.net/ttv-boxart/Overwatch-144x192.jpg', '488552'
+            );
+            INSERT INTO wizardlabs.game(name, thumbnail_url, twitch_id) VALUES(
+                'Apex Legends', 'https://static-cdn.jtvnw.net/ttv-boxart/Apex%20Legends-144x192.jpg', '511224'
+            );
+            INSERT INTO wizardlabs.game(name, thumbnail_url, twitch_id) VALUES(
+                'League of Legends', 'https://static-cdn.jtvnw.net/ttv-boxart/League%20of%20Legends-144x192.jpg', '21779'
+            );
+            INSERT INTO wizardlabs.game(name, thumbnail_url, twitch_id) VALUES(
+                'Counter-Strike: Global Offensive', 'https://static-cdn.jtvnw.net/ttv-boxart/./Counter-Strike:%20Global%20Offensive-144x192.jpg', '32399'
+            );
+            INSERT INTO wizardlabs.game(name, thumbnail_url, twitch_id) VALUES(
+                'Fortnite', 'https://static-cdn.jtvnw.net/ttv-boxart/Fortnite-144x192.jpg', '33214'
+            );
+            INSERT INTO wizardlabs.game(name, thumbnail_url, twitch_id) VALUES(
+                'Call of Duty: Modern Warfare', 'https://static-cdn.jtvnw.net/ttv-boxart/./Call%20of%20Duty:%20Modern%20Warfare-144x192.jpg', '512710'
+            );
+
+            CREATE TABLE IF NOT EXISTS wizardlabs.beta_user (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(100) NOT NULL,
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+
+            CREATE TABLE IF NOT EXISTS wizardlabs.social_login (
+                id SERIAL PRIMARY KEY,
+                action VARCHAR(20) NOT NULL,
+                token VARCHAR(50) NOT NULL,
+                provider_type VARCHAR(20) NOT NULL,
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+        </sql>
+        <rollback>
+            DROP TABLE IF EXISTS wizardlabs.game;
+            DROP TABLE IF EXISTS wizardlabs.beta_user;
+            DROP TABLE IF EXISTS wizardlabs.social_login;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.0.3" author="msekerjitsky">
+        <comment>Create tables for user</comment>
+        <sql splitStatements="true">
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_account (
+                id SERIAL PRIMARY KEY,
+                provider_type VARCHAR(20),
+                auth JSONB,
+                user_data JSONB,
+                status VARCHAR(20) NOT NULL,
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_account_state (
+                id SERIAL PRIMARY KEY,
+                token VARCHAR(50) NOT NULL,
+                provider_type VARCHAR(20) NOT NULL,
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_bumper (
+                id SERIAL PRIMARY KEY,
+                path VARCHAR(256),
+                thumbnail_path VARCHAR(256),
+                url VARCHAR(512),
+                thumbnail_url VARCHAR(512),
+                size INT,
+                status VARCHAR(20) NOT NULL,
+                type VARCHAR(20) NOT NULL,
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_channel (
+                id SERIAL PRIMARY KEY,
+                external_id VARCHAR(256) NOT NULL,
+                name VARCHAR(512) NOT NULL,
+                original_name VARCHAR(512) NOT NULL,
+                provider_type VARCHAR(20) NOT NULL,
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_clip (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(256),
+                channel_id VARCHAR(256),
+                game VARCHAR(256),
+                path VARCHAR(256),
+                thumbnail_path VARCHAR(256),
+                url VARCHAR(512),
+                thumbnail_url VARCHAR(512),
+                labels TEXT[],
+                metadata JSONB,
+                tags TEXT[],
+                stream_id VARCHAR(50),
+                type VARCHAR(20),
+                ai_type VARCHAR(50),
+                streamer_name VARCHAR(100),
+                game_mode VARCHAR(256) NOT NULL DEFAULT 'Battle Royale',
+                stream_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_game (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                game_id INTEGER NOT NULL REFERENCES wizardlabs.game (id),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_link (
+                id SERIAL PRIMARY KEY,
+                token VARCHAR(50) NOT NULL,
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_overlay (
+                id SERIAL PRIMARY KEY,
+                path VARCHAR(256),
+                thumbnail_path VARCHAR(256),
+                url VARCHAR(512),
+                thumbnail_url VARCHAR(512),
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                last_used_date TIMESTAMP NOT NULL DEFAULT 'epoch',
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_password_reset (
+                id SERIAL PRIMARY KEY,
+                token VARCHAR(50),
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_video (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(256),
+                path VARCHAR(256),
+                thumbnail_path VARCHAR(256),
+                url VARCHAR(512),
+                thumbnail_url VARCHAR(512),
+                metadata JSONB,
+                tags TEXT[],
+                status VARCHAR(20),
+                type VARCHAR(20),
+                clip_id INTEGER NOT NULL REFERENCES wizardlabs.user_clip (id),
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                upload_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+                created_date TIMESTAMP NOT NULL
+            );
+        </sql>
+        <rollback>
+            DROP TABLE IF EXISTS wizardlabs.user_account;
+            DROP TABLE IF EXISTS wizardlabs.user_account_state;
+            DROP TABLE IF EXISTS wizardlabs.user_bumper;
+            DROP TABLE IF EXISTS wizardlabs.user_channel;
+            DROP TABLE IF EXISTS wizardlabs.user_clip;
+            DROP TABLE IF EXISTS wizardlabs.user_game;
+            DROP TABLE IF EXISTS wizardlabs.user_link;
+            DROP TABLE IF EXISTS wizardlabs.user_overlay;
+            DROP TABLE IF EXISTS wizardlabs.user_password_reset;
+            DROP TABLE IF EXISTS wizardlabs.user_video;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.0.4" author="msekerjitsky">
+        <comment>Create table for clip metatags</comment>
+        <sql splitStatements="true">
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_clip_metadata (
+                id SERIAL PRIMARY KEY,
+                metadata JSONB NOT NULL,
+                clip_id INTEGER NOT NULL REFERENCES wizardlabs.user_clip (id),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+        </sql>
+        <rollback>
+            DROP TABLE IF EXISTS wizardlabs.user_clip_metadata;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.0.5" author="msekerjitsky">
+        <comment>Create tables for communities</comment>
+        <sql splitStatements="true">
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_community (
+                id SERIAL PRIMARY KEY,
+                owner_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                name VARCHAR(256),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_community_member (
+                id SERIAL PRIMARY KEY,
+                community_id INTEGER NOT NULL REFERENCES wizardlabs.user_community (id),
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+                UNIQUE (community_id, user_id)
+            );
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_community_invite (
+                id SERIAL PRIMARY KEY,
+                community_id INTEGER NOT NULL REFERENCES wizardlabs.user_community (id),
+                token VARCHAR(50) NOT NULL,
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_community_video (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                community_id INTEGER NOT NULL REFERENCES wizardlabs.user_community (id),
+                video_id INTEGER NOT NULL REFERENCES wizardlabs.user_video (id),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+        </sql>
+        <rollback>
+            DROP TABLE IF EXISTS wizardlabs.user_community;
+            DROP TABLE IF EXISTS wizardlabs.user_community_member;
+            DROP TABLE IF EXISTS wizardlabs.user_community_invite;
+            DROP TABLE IF EXISTS wizardlabs.user_community_video;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.0.6" author="msekerjitsky">
+        <comment>Create view for community members</comment>
+        <sql splitStatements="true">
+            DROP VIEW IF EXISTS wizardlabs.user_community_members_view;
+
+            CREATE OR REPLACE VIEW wizardlabs.user_community_members_view AS
+                SELECT uc.*, ucm.user_id, ucm.id AS member_id
+                FROM wizardlabs.user_community uc
+                    INNER JOIN wizardlabs.user_community_member ucm
+                        ON uc.id = ucm.community_id;
+        </sql>
+        <rollback>
+            DROP VIEW IF EXISTS wizardlabs.user_community_members_view;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.0.7" author="msekerjitsky">
+        <comment>Create tables for metrics</comment>
+        <sql splitStatements="true">
+            CREATE TABLE IF NOT EXISTS wizardlabs.user_video_publish (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES wizardlabs.user (id),
+                video_id INTEGER NOT NULL REFERENCES wizardlabs.user_video (id),
+                user_account_id INTEGER REFERENCES wizardlabs.user_account (id),
+                provider_type VARCHAR(20) NOT NULL,
+                social_id VARCHAR(256),
+                status VARCHAR(256),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+        </sql>
+        <rollback>
+            DROP TABLE IF EXISTS wizardlabs.user_video_publish;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.0.8" author="msekerjitsky">
+        <comment>Create tables for scheduled jobs</comment>
+        <sql splitStatements="true">
+            CREATE TABLE IF NOT EXISTS wizardlabs.scheduled_job (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                status VARCHAR(20) NOT NULL,
+                last_started_date TIMESTAMP
+            );
+        </sql>
+        <rollback>
+            DROP TABLE IF EXISTS wizardlabs.scheduled_job;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="1.0.9" author="msekerjitsky">
+        <comment>Create tables for community bumpers and overlays</comment>
+        <sql splitStatements="true">
+            CREATE TABLE IF NOT EXISTS wizardlabs.community_bumper (
+                id SERIAL PRIMARY KEY,
+                path VARCHAR(256),
+                thumbnail_path VARCHAR(256),
+                url VARCHAR(512),
+                thumbnail_url VARCHAR(512),
+                size INT,
+                type VARCHAR(20) NOT NULL,
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+            CREATE TABLE IF NOT EXISTS wizardlabs.community_overlay (
+                id SERIAL PRIMARY KEY,
+                path VARCHAR(256),
+                thumbnail_path VARCHAR(256),
+                url VARCHAR(512),
+                thumbnail_url VARCHAR(512),
+                created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
+            );
+
+            DROP VIEW IF EXISTS wizardlabs.user_overlay_view;
+            CREATE OR REPLACE VIEW wizardlabs.user_overlay_view AS
+                SELECT id, user_id, url, thumbnail_url, created_date, 'private' as access FROM wizardlabs.user_overlay
+                UNION ALL
+                SELECT id, NULL as user_id, url, thumbnail_url, created_date, 'common' as access FROM wizardlabs.community_overlay;
+
+            DROP VIEW IF EXISTS wizardlabs.user_bumper_view;
+            CREATE OR REPLACE VIEW wizardlabs.user_bumper_view AS
+                SELECT id, user_id, url, thumbnail_url, type, created_date, status, 'private' as access FROM wizardlabs.user_bumper
+                UNION ALL
+                SELECT id, NULL as user_id, url, thumbnail_url, type, created_date, NULL as status, 'common' as access FROM wizardlabs.community_bumper;
+        </sql>
+        <rollback>
+            DROP TABLE IF EXISTS wizardlabs.community_bumper;
+            DROP TABLE IF EXISTS wizardlabs.community_overlay;
+            DROP VIEW IF EXISTS wizardlabs.user_overlay_view;
+            DROP VIEW IF EXISTS wizardlabs.user_bumper_view;
+        </rollback>
+    </changeSet>
+
+
+</databaseChangeLog>
