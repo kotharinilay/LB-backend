@@ -29,7 +29,7 @@
     "nodemailer": "^6.4.6",
     "oauth-1.0a": "^2.2.6",
     "pg-promise": "^10.5.1",
-    "puppeteer": "^0.13.0",
+    "puppeteer": "^1.13.0",
     "redis": "^2.8.0",
     "request": "^2.88.2",
     "system-commands": "^1.1.7",
