@@ -26,7 +26,7 @@
     "mime-types": "^2.1.26",
     "moment": "^2.24.0",
     "multer": "^1.4.2",
-    "nodemailer": "^6.4.6",
+    "nodemailer": "^6.4.16",
     "oauth-1.0a": "^2.2.6",
     "pg-promise": "^10.5.1",
     "puppeteer": "^0.13.0",
